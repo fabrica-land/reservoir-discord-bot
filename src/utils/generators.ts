@@ -9,7 +9,7 @@ import logger from "./logger";
 import { SelectMenuType } from "./types";
 import handleMediaConversion from "./media";
 import axios from "axios";
-import {RESERVOIR_ICON_URL} from "../env";
+import {RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
 
 /**
  * Basic discord embed template generator
@@ -35,7 +35,7 @@ export function baseEmbedGen(
     .setTitle("Search Results")
     .setAuthor({
       name: "Reservoir Bot",
-      url: "https://reservoir.tools/",
+      url: RESERVOIR_BASE_URL,
       iconURL: RESERVOIR_ICON_URL,
     })
     .setDescription(
@@ -72,7 +72,7 @@ export async function selectionEmbedGen(
   let url: string = `https://reservoir.market/collections/${searchData.id}`;
   if (menuId === SelectMenuType.floorMenu) {
     if (searchData.floorAsk?.token) {
-      url = `https://api.reservoir.tools/redirect/sources/${searchData.floorAsk.sourceDomain}/tokens/${searchData.floorAsk.token.contract}%3A${searchData.floorAsk.token.tokenId}/link/v2`;
+      url = `${RESERVOIR_BASE_URL}/redirect/sources/${searchData.floorAsk.sourceDomain}/tokens/${searchData.floorAsk.token.contract}%3A${searchData.floorAsk.token.tokenId}/link/v2`;
     }
     image = searchData.floorAsk?.token?.image;
   } else if (menuId === SelectMenuType.statMenu) {

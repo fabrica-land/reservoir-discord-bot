@@ -10,6 +10,7 @@ import getCollection from "../handlers/getCollection";
 import { selectionEmbedGen } from "../utils/generators";
 import { SelectMenuType } from "../utils/types";
 import Redis from "ioredis";
+import {RESERVOIR_BASE_URL} from "../env";
 
 /**
  * Handle to discord select menu interaction
@@ -179,7 +180,7 @@ export async function replySelectInteraction(
               .setLabel("Purchase")
               .setStyle(5)
               .setURL(
-                `https://api.reservoir.tools/redirect/sources/${searchData.floorAsk.sourceDomain}/tokens/${searchData.floorAsk.token.contract}%3A${searchData.floorAsk.token.tokenId}/link/v2`
+                `${RESERVOIR_BASE_URL}/redirect/sources/${searchData.floorAsk.sourceDomain}/tokens/${searchData.floorAsk.token.contract}%3A${searchData.floorAsk.token.tokenId}/link/v2`
               )
           );
         } else {

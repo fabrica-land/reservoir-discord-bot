@@ -10,7 +10,7 @@ import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
-import {ALERTS_ENABLED} from "../env";
+import {ALERTS_ENABLED, RESERVOIR_BASE_URL} from "../env";
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 
 /**
@@ -120,7 +120,7 @@ export async function salePoll(
         continue;
       }
       const marketIcon = await handleMediaConversion(
-        `https://api.reservoir.tools/redirect/sources/${sales[i].orderSource}/logo/v2`,
+        `${RESERVOIR_BASE_URL}/redirect/sources/${sales[i].orderSource}/logo/v2`,
         `${sales[i].orderSource}`
       );
 
@@ -147,7 +147,7 @@ export async function salePoll(
           text: `${sales[i].orderSource}`,
           iconURL: marketIcon
             ? `attachment://${marketIcon.name}`
-            : `https://api.reservoir.tools/redirect/sources/${sales[i].orderSource}/logo/v2`,
+            : `${RESERVOIR_BASE_URL}/redirect/sources/${sales[i].orderSource}/logo/v2`,
         })
         .setTimestamp();
 

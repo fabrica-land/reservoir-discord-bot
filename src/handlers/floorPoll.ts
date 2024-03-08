@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "../utils/logger";
-import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, PRICE_CHANGE_OVERRIDE} from "../env";
+import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, PRICE_CHANGE_OVERRIDE, RESERVOIR_BASE_URL} from "../env";
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 
 /**
@@ -157,7 +157,7 @@ export async function floorPoll(
         .setTitle("New Floor Listing!")
         .setAuthor({
           name: `${floorToken.token.collection.name}`,
-          url: "https://reservoir.tools/",
+          url: RESERVOIR_BASE_URL,
           iconURL: `${floorToken.token.collection.image}`,
         })
         .setDescription(
@@ -182,7 +182,7 @@ export async function floorPoll(
           .setLabel("Purchase")
           .setStyle(5)
           .setURL(
-            `https://api.reservoir.tools/redirect/sources/${floorAsk.floorAsk.source}/tokens/${floorToken.token.collection.id}%3A${floorToken.token.tokenId}/link/v2`
+            `${RESERVOIR_BASE_URL}/redirect/sources/${floorAsk.floorAsk.source}/tokens/${floorToken.token.collection.id}%3A${floorToken.token.tokenId}/link/v2`
           )
       );
 

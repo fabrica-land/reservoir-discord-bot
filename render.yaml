@@ -1,0 +1,93 @@
+services:
+  # Mainnet
+  - type: worker
+    name: reservoir-discord-bot-mainnet
+    env: node
+    plan: standard
+    region: oregon
+    repo: https://github.com/fabrica-land/reservoir-discord-bot
+    branch: main
+    buildCommand: 'npm run ci'
+    startCommand: 'npm start'
+    autoDeploy: true
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis-starter
+          property: connectionString
+      - key: ALERT_CONTRACT_ADDRESS
+        value: 0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95
+      - key: ALERT_COOL_DOWN_SECONDS
+        value: 180
+      - key: ALERTS_ENABLED
+        value: |
+          {
+            "bid": false,
+            "floor": false,
+            "listings": true,
+            "sales": true
+          }
+      - key: DISCORD_APPLICATION_ID
+        value: 1215454490237337740
+      - key: DISCORD_CHANNEL_IDS
+        value: |
+          {
+            "listingChannel": "1215689531349663805",
+            "mainChannel": "1215689531349663805",
+            "salesChannel": "1215689531349663805"
+          }
+      - key: PRICE_CHANGE_OVERRIDE
+        value: 0.1
+      - key: RESERVOIR_BASE_URL
+        value: https://api.reservoir.tools
+      - key: RESERVOIR_ICON_URL
+        value: https://cdn.discordapp.com/icons/872790973309153280/0dc1b70867aeeb2ee32563f575c191c6.webp?size=4096
+      - key: TRACKED_CONTRACTS
+        value: '["0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95"]'
+  # Sepolia
+  - type: worker
+    name: reservoir-discord-bot-sepolia
+    env: node
+    plan: standard
+    region: oregon
+    repo: https://github.com/fabrica-land/reservoir-discord-bot
+    branch: main
+    buildCommand: 'npm run ci'
+    startCommand: 'npm start'
+    autoDeploy: true
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis-starter
+          property: connectionString
+      - key: ALERT_CONTRACT_ADDRESS
+        value: 0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD
+      - key: ALERT_COOL_DOWN_SECONDS
+        value: 180
+      - key: ALERTS_ENABLED
+        value: |
+          {
+            "bid": false,
+            "floor": false,
+            "listings": true,
+            "sales": true
+          }
+      - key: DISCORD_APPLICATION_ID
+        value: 1215454490237337740
+      - key: DISCORD_CHANNEL_IDS
+        value: |
+          {
+            "listingChannel": "1215424200030818305",
+            "mainChannel": "1215424200030818305",
+            "salesChannel": "1215424200030818305"
+          }
+      - key: PRICE_CHANGE_OVERRIDE
+        value: 0.1
+      - key: RESERVOIR_BASE_URL
+        value: https://api-sepolia.reservoir.tools
+      - key: RESERVOIR_ICON_URL
+        value: https://cdn.discordapp.com/icons/872790973309153280/0dc1b70867aeeb2ee32563f575c191c6.webp?size=4096
+      - key: TRACKED_CONTRACTS
+        value: '["0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD"]'
