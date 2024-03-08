@@ -41,7 +41,7 @@ export async function salePoll(
     await sdk.auth(apiKey);
 
     // Getting floor ask events from Reservoir
-    const salesResponse: paths["/sales/v4"]["get"]["responses"]["200"]["schema"] =
+    const salesResponse: { data: paths["/sales/v4"]["get"]["responses"]["200"]["schema"] } =
       await sdk.getSalesV4({
         contract: contractArray,
         includeTokenMetadata: "true",
@@ -50,12 +50,16 @@ export async function salePoll(
       });
 
     // Getting the most recent sales event
-    const sales = salesResponse.sales;
+    const sales = salesResponse.data.sales;
 
     // Log failure + return if floor event couldn't be pulled
     if (!sales) {
       logger.error(`Could not pull sales for ${contractArray}`);
       return;
+    }
+
+    if (!sales.length) {
+      return
     }
 
     // Pull cached sales event id from Redis

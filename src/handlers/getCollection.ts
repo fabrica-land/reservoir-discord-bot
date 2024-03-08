@@ -2,7 +2,6 @@ import {RESERVOIR_API_KEY} from "../env";
 
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 import { paths } from "@reservoir0x/reservoir-kit-client";
-import dotenv from "dotenv";
 import logger from "../utils/logger";
 
 /**
@@ -36,12 +35,11 @@ export default async function getCollection(
   const selector = contractAddress ? { id: contractAddress } : { name: name };
 
   try {
-    dotenv.config();
     // Authorizing with Reservoir API Key
     await sdk.auth(RESERVOIR_API_KEY);
 
     // Pull collection data from Reservoir
-    const searchDataResponse: paths["/collections/v5"]["get"]["responses"]["200"]["schema"] =
+    const searchDataResponse: { data: paths["/collections/v5"]["get"]["responses"]["200"]["schema"] } =
       await sdk.getCollectionsV5({
         ...selector,
         includeTopBid: includeTopBid,
@@ -51,7 +49,7 @@ export default async function getCollection(
       });
 
     // Return array of collections
-    return searchDataResponse.collections;
+    return searchDataResponse.data.collections;
   } catch (e) {
     // Log failure + throw on error
     logger.error(

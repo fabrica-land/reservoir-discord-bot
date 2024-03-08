@@ -40,7 +40,7 @@ export async function listingPoll(
     await sdk.auth(apiKey);
 
     // Getting floor ask events from Reservoir
-    const listingResponse: paths["/orders/asks/v3"]["get"]["responses"]["200"]["schema"] =
+    const listingResponse: { data: paths["/orders/asks/v3"]["get"]["responses"]["200"]["schema"] } =
       await sdk.getOrdersAsksV3({
         contracts: contractArray,
         includePrivate: "false",
@@ -52,12 +52,15 @@ export async function listingPoll(
       });
 
     // Getting the most recent floor ask event
-    const listings = listingResponse.orders;
+    const listings = listingResponse.data.orders;
 
     // Log failure + return if floor event couldn't be pulled
     if (!listings) {
       logger.error(`Could not pull listings for ${contractArray}`);
       return;
+    }
+    if (!listings.length) {
+      return
     }
 
     // Pull cached listing event id from Redis
