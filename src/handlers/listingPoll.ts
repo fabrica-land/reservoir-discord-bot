@@ -60,6 +60,7 @@ export async function listingPoll(
       return;
     }
     if (!listings.length) {
+      logger.debug(`There are no listings for ${contractArray}`)
       return
     }
 

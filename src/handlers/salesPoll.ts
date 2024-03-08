@@ -59,6 +59,7 @@ export async function salePoll(
     }
 
     if (!sales.length) {
+      logger.debug(`There are no sales for ${contractArray}`)
       return
     }
 
