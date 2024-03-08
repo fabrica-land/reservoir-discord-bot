@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "../utils/logger";
-import constants from "../utils/constants";
+import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, PRICE_CHANGE_OVERRIDE} from "../env";
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 
 /**
@@ -24,7 +24,7 @@ export async function floorPoll(
   apiKey: string,
   redis: Redis
 ) {
-  if (!constants.ALERT_ENABLED.floor || contractAddress?.length <= 0) {
+  if (!ALERTS_ENABLED.floor || contractAddress?.length <= 0) {
     return;
   }
   if (channel === undefined) {
@@ -79,9 +79,9 @@ export async function floorPoll(
     // On X% change in floor ask override alert cooldown
     if (
       Number(cachedPrice) / Number(floorAsk.floorAsk.price) >
-        1 + constants.PRICE_CHANGE_OVERRIDE ||
+        1 + PRICE_CHANGE_OVERRIDE ||
       Number(cachedPrice) / Number(floorAsk.floorAsk.price) <
-        1 - constants.PRICE_CHANGE_OVERRIDE
+        1 - PRICE_CHANGE_OVERRIDE
     ) {
       eventCooldown = null;
     }
@@ -98,7 +98,7 @@ export async function floorPoll(
         "floorcooldown",
         "true",
         "EX",
-        constants.ALERT_COOLDOWN
+        ALERT_COOL_DOWN_SECONDS
       );
       // setting updated floor ask price
       const priceSuccess: "OK" = await redis.set(

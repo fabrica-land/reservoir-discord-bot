@@ -10,7 +10,7 @@ import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
-import constants from "../utils/constants";
+import {ALERTS_ENABLED} from "../env";
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 
 /**
@@ -26,7 +26,7 @@ export async function salePoll(
   apiKey: string,
   redis: Redis
 ) {
-  if (!constants.ALERT_ENABLED.sales || contractArray?.length <= 0) {
+  if (!ALERTS_ENABLED.sales || contractArray?.length <= 0) {
     return;
   }
   if (channel === undefined) {

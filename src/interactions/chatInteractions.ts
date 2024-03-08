@@ -1,16 +1,12 @@
 import {
   CacheType,
   ChatInputCommandInteraction,
-  Client,
-  DMChannel,
-  PartialDMChannel,
-  TextChannel,
 } from "discord.js";
 import logger from "../utils/logger";
 import getCollection from "../handlers/getCollection";
 import { baseEmbedGen, selectMenuGen } from "../utils/generators";
 import { AlertType, CommandType } from "../utils/types";
-import constants from "../utils/constants";
+import {ALERTS_ENABLED} from "../env";
 
 /**
  * Handle to discord chat interaction
@@ -122,40 +118,40 @@ export default async function replyChatInteraction(
         const { value: name } = interaction.options.get("name", true);
         switch (name) {
           case AlertType.listings: {
-            constants.ALERT_ENABLED.listings = false;
+            ALERTS_ENABLED.listings = false;
             await interaction.reply({
               content: `listings alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.listings
+                ALERTS_ENABLED.listings
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.sales: {
-            constants.ALERT_ENABLED.sales = false;
+            ALERTS_ENABLED.sales = false;
             await interaction.reply({
               content: `sales alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.sales
+                ALERTS_ENABLED.sales
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.floor: {
-            constants.ALERT_ENABLED.floor = false;
+            ALERTS_ENABLED.floor = false;
             await interaction.reply({
               content: `floor alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.floor
+                ALERTS_ENABLED.floor
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.bid: {
-            constants.ALERT_ENABLED.bid = false;
+            ALERTS_ENABLED.bid = false;
             await interaction.reply({
               content: `bid alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.bid
+                ALERTS_ENABLED.bid
               )}`,
               ephemeral: true,
             });
@@ -170,40 +166,40 @@ export default async function replyChatInteraction(
         const { value: name } = interaction.options.get("name", true);
         switch (name) {
           case AlertType.listings: {
-            constants.ALERT_ENABLED.listings = true;
+            ALERTS_ENABLED.listings = true;
             await interaction.reply({
               content: `listings alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.listings
+                ALERTS_ENABLED.listings
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.sales: {
-            constants.ALERT_ENABLED.sales = true;
+            ALERTS_ENABLED.sales = true;
             await interaction.reply({
               content: `sales alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.sales
+                ALERTS_ENABLED.sales
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.floor: {
-            constants.ALERT_ENABLED.floor = true;
+            ALERTS_ENABLED.floor = true;
             await interaction.reply({
               content: `floor alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.floor
+                ALERTS_ENABLED.floor
               )}`,
               ephemeral: true,
             });
             break;
           }
           case AlertType.bid: {
-            constants.ALERT_ENABLED.bid = true;
+            ALERTS_ENABLED.bid = true;
             await interaction.reply({
               content: `bid alert is now set to ${JSON.stringify(
-                constants.ALERT_ENABLED.bid
+                ALERTS_ENABLED.bid
               )}`,
               ephemeral: true,
             });
@@ -217,7 +213,7 @@ export default async function replyChatInteraction(
 
       case CommandType.listAlerts: {
         await interaction.reply({
-          content: JSON.stringify(constants.ALERT_ENABLED),
+          content: JSON.stringify(ALERTS_ENABLED),
           ephemeral: true,
         });
         break;

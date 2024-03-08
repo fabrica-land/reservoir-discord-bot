@@ -1,3 +1,5 @@
+import {RESERVOIR_API_KEY} from "../env";
+
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 import { paths } from "@reservoir0x/reservoir-kit-client";
 import dotenv from "dotenv";
@@ -36,7 +38,7 @@ export default async function getCollection(
   try {
     dotenv.config();
     // Authorizing with Reservoir API Key
-    await sdk.auth(process.env.RESERVOIR_API_KEY);
+    await sdk.auth(RESERVOIR_API_KEY);
 
     // Pull collection data from Reservoir
     const searchDataResponse: paths["/collections/v5"]["get"]["responses"]["200"]["schema"] =

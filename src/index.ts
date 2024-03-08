@@ -1,60 +1,37 @@
-import dotenv from "dotenv";
-import logger from "./utils/logger";
-import Discord from "./discord";
-import waitPort from "wait-port";
-import constants from "./utils/constants";
+import dotenv from 'dotenv'
+import logger from './utils/logger'
+import Discord from './discord'
+import waitPort from 'wait-port'
+import {DISCORD_TOKEN, REDIS_URL, RESERVOIR_API_KEY} from './env'
 
 (async () => {
   try {
     // Setup env vars
-    dotenv.config();
-
-    // Check env vars
-    const TOKEN: string | undefined = process.env.TOKEN;
-    const RESERVOIR_API_KEY: string | undefined = process.env.RESERVOIR_API_KEY;
-    const TRACKED_CONTRACTS: string[] | undefined = constants.TRACKED_CONTRACTS;
-    const CHANNEL_IDS: object | undefined = constants.CHANNEL_IDS;
-    const APPLICATION_ID: string | undefined = constants.APPLICATION_ID;
-    const REDIS_PORT: number | undefined = constants.REDIS_PORT;
-    const REDIS_HOST: string | undefined = constants.REDIS_HOST;
-
-    if (
-      !TOKEN ||
-      !RESERVOIR_API_KEY ||
-      !TRACKED_CONTRACTS ||
-      !CHANNEL_IDS ||
-      !APPLICATION_ID ||
-      !REDIS_PORT ||
-      !REDIS_HOST
-    ) {
-      logger.error("Missing env vars");
-      throw new Error("Missing env vars");
-    }
-
-    const REDIS_URL = { port: REDIS_PORT, host: REDIS_HOST };
+    dotenv.config()
 
     // Setup Discord
-    const discord = new Discord(TOKEN, RESERVOIR_API_KEY, REDIS_URL);
+    const discord = new Discord(DISCORD_TOKEN, RESERVOIR_API_KEY, REDIS_URL)
+    const url = new URL(REDIS_URL)
 
     const params = {
-      host: REDIS_HOST,
-      port: REDIS_PORT,
-    };
+      host: url.hostname,
+      port: parseInt(url.port, 10),
+    }
 
     waitPort(params).then(async ({ open, ipVersion }) => {
       if (open) {
-        logger.info(`The port is now open on IPv${ipVersion}!`);
+        logger.info(`The port is now open on IPv${ipVersion}!`)
         // Listen for Discord events
-        await discord.handleEvents();
-      } else logger.info("The port did not open before the timeout...");
-    });
+        await discord.handleEvents()
+      } else logger.info('The port did not open before the timeout...')
+    })
   } catch (e) {
     if (e instanceof Error) {
-      logger.error(e);
-      throw new Error(e.message);
+      logger.error(e)
+      throw new Error(e.message)
     } else {
-      logger.error(e);
-      throw new Error("Unexpected error");
+      logger.error(e)
+      throw new Error('Unexpected error')
     }
   }
-})();
+})()

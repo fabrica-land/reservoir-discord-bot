@@ -8,8 +8,8 @@ import {
 } from "discord.js";
 import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "../utils/logger";
-import constants from "../utils/constants";
 import getCollection from "./getCollection";
+import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, RESERVOIR_ICON_URL} from "../env";
 const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
 
 /**
@@ -25,7 +25,7 @@ export async function bidPoll(
   apiKey: string,
   redis: Redis
 ) {
-  if (!constants.ALERT_ENABLED.bid || contractAddress?.length <= 0) {
+  if (!ALERTS_ENABLED.bid || contractAddress?.length <= 0) {
     return;
   }
   if (channel === undefined) {
@@ -84,7 +84,7 @@ export async function bidPoll(
         "bidcooldown",
         "true",
         "EX",
-        constants.ALERT_COOLDOWN
+        ALERT_COOL_DOWN_SECONDS,
       );
 
       // Log failure + return if top bid info couldn't be set
@@ -117,7 +117,7 @@ export async function bidPoll(
         .setAuthor({
           name: bidCollection.name,
           url: `https://reservoir.market/collections/${bidCollection.id}`,
-          iconURL: bidCollection.image ?? constants.RESERVOIR_ICON,
+          iconURL: bidCollection.image ?? RESERVOIR_ICON_URL,
         })
         .setDescription(
           `The top bid on the collection just changed to ${
@@ -127,7 +127,7 @@ export async function bidPoll(
             6
           )}](https://www.reservoir.market/address/${topBid.topBid.maker})`
         )
-        .setThumbnail(bidCollection.image ?? constants.RESERVOIR_ICON)
+        .setThumbnail(bidCollection.image ?? RESERVOIR_ICON_URL)
         .setTimestamp();
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(

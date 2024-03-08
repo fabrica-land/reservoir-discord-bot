@@ -4,12 +4,12 @@ import {
   ActionRowBuilder,
   AttachmentBuilder,
 } from "discord.js";
-import constants from "./constants";
 import { paths } from "@reservoir0x/reservoir-kit-client";
 import logger from "./logger";
 import { SelectMenuType } from "./types";
 import handleMediaConversion from "./media";
 import axios from "axios";
+import {RESERVOIR_ICON_URL} from "../env";
 
 /**
  * Basic discord embed template generator
@@ -36,14 +36,14 @@ export function baseEmbedGen(
     .setAuthor({
       name: "Reservoir Bot",
       url: "https://reservoir.tools/",
-      iconURL: constants.RESERVOIR_ICON,
+      iconURL: RESERVOIR_ICON_URL,
     })
     .setDescription(
       searchData.length != 0
         ? `**The top ${searchData.length} results for "${name}" are:**\n${fieldValue}`
         : `**No results found for "${name}"**`
     )
-    .setThumbnail(constants.RESERVOIR_ICON)
+    .setThumbnail(RESERVOIR_ICON_URL ?? '')
     .setTimestamp();
 }
 
@@ -96,7 +96,7 @@ export async function selectionEmbedGen(
     image = searchData.image;
   }
 
-  const returnImage = image ?? constants.RESERVOIR_ICON;
+  const returnImage = image ?? RESERVOIR_ICON_URL ?? '';
 
   // If image is webp, convert to png
   const { headers } = await axios.get(returnImage);
