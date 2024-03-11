@@ -133,10 +133,6 @@ export async function salePoll(
         );
         continue;
       }
-      const marketIcon = await handleMediaConversion(
-        `${RESERVOIR_BASE_URL}/redirect/sources/${sales[i].orderSource}/logo/v2`,
-        `${sales[i].orderSource}`
-      );
 
       const thumbnail = await handleMediaConversion(image, name);
 
@@ -159,9 +155,6 @@ export async function salePoll(
         .setThumbnail(`attachment://${thumbnail.name}`)
         .setFooter({
           text: `${sales[i].orderSource}`,
-          iconURL: marketIcon
-            ? `attachment://${marketIcon.name}`
-            : `${RESERVOIR_BASE_URL}/redirect/sources/${sales[i].orderSource}/logo/v2`,
         })
         .setTimestamp();
 
@@ -175,7 +168,7 @@ export async function salePoll(
       channel.send({
         embeds: [salesEmbed],
         components: [row],
-        files: [marketIcon, thumbnail, authorIcon],
+        files: [thumbnail, authorIcon],
       });
     }
     await redis.set("saleorderid", sales[0].saleId);
