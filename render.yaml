@@ -39,6 +39,8 @@ services:
           }
       - key: ETHERSCAN_BASE_URL
         value: https://etherscan.io
+      - key: MARKETPLACE_BASE_URL
+        value: https://app.fabrica.land
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL
@@ -87,6 +89,8 @@ services:
           }
       - key: ETHERSCAN_BASE_URL
         value: https://sepolia.etherscan.io
+      - key: MARKETPLACE_BASE_URL
+        value: https://sepolia.fabrica.land
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL

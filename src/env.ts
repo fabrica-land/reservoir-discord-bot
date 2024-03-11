@@ -16,6 +16,15 @@ const getString = (name: string): string => {
   return value as string
 }
 
+const getBoolean = (name: string): boolean => {
+  const str = getString(name)
+  const value = str === 'true' ? true : str === 'false' ? false : undefined
+  if (value === undefined) {
+    error(`Env var ${name} must be "true" or "false"`)
+  }
+  return value ?? false
+}
+
 const getNumber = (name: string): number => {
   const str = getString(name)
   const value = parseFloat(str)
@@ -67,6 +76,7 @@ export const DISCORD_APPLICATION_ID = getString('DISCORD_APPLICATION_ID')
 export const DISCORD_CHANNEL_IDS = getStringToString('DISCORD_CHANNEL_IDS')
 export const DISCORD_TOKEN = getString('DISCORD_TOKEN')
 export const ETHERSCAN_BASE_URL = getString('ETHERSCAN_BASE_URL')
+export const MARKETPLACE_BASE_URL= getString('MARKETPLACE_BASE_URL')
 export const PRICE_CHANGE_OVERRIDE = getNumber('PRICE_CHANGE_OVERRIDE')
 export const REDIS_URL = getString('REDIS_URL')
 export const RESERVOIR_API_KEY = getString('RESERVOIR_API_KEY')

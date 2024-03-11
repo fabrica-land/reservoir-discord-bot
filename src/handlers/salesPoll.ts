@@ -10,7 +10,14 @@ import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
-import {ALERTS_ENABLED, ETHERSCAN_BASE_URL, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {
+  ALERTS_ENABLED,
+  ETHERSCAN_BASE_URL,
+  MARKETPLACE_BASE_URL,
+  RESERVOIR_API_KEY,
+  RESERVOIR_BASE_URL,
+  RESERVOIR_ICON_URL
+} from "../env";
 import {buildUrl} from "../utils/build-url";
 
 /**
@@ -51,7 +58,6 @@ export async function salePoll(
     })
     const salesResult = (await salesResponse.json()) as paths['/sales/v4']['get']['responses']["200"]["schema"]
 
-    console.log(JSON.stringify(salesResult, undefined, 2))
     // Getting the most recent sales event
     const sales = salesResult.sales;
 
@@ -144,7 +150,7 @@ export async function salePoll(
         .setTitle(`${sales[i].token?.name} has been sold!`)
         .setAuthor({
           name: `${sales[i].token?.collection?.name}`,
-          url: `https://forgotten.market/${sales[i].token?.contract}`,
+          url: MARKETPLACE_BASE_URL,
           iconURL: `attachment://${authorIcon.name}`,
         })
         .setDescription(

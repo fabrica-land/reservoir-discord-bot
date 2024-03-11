@@ -9,7 +9,7 @@ import {
 import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
-import {ALERTS_ENABLED, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {ALERTS_ENABLED, MARKETPLACE_BASE_URL, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
 import {buildUrl} from "../utils/build-url";
 
 /**
@@ -37,21 +37,20 @@ export async function listingPoll(
   }
   try {
     // Getting floor ask events from Reservoir
-    const listingsResponse = await fetch(
-      buildUrl(RESERVOIR_BASE_URL, 'orders/asks/v3', [
-        ...contractArray.map<[string, string | number | boolean]>(address => (['contract', address])),
-        ['includePrivate', false],
-        ['includeMetadata', true],
-        ['includeRawData', false],
-        ['sortBy', 'createdAt'],
-        ['limit', 500],
-      ]), {
-        headers: {
-          'x-api-key': RESERVOIR_API_KEY,
-          Accept: 'application/json',
-        },
+    const listingsUrl = buildUrl(RESERVOIR_BASE_URL, 'orders/asks/v3', [
+      ...contractArray.map<[string, string | number | boolean]>(address => (['contracts', address])),
+      ['includePrivate', false],
+      ['includeMetadata', true],
+      ['includeRawData', false],
+      ['sortBy', 'createdAt'],
+      ['limit', 500],
+    ])
+    const listingsResponse = await fetch(listingsUrl, {
+      headers: {
+        'x-api-key': RESERVOIR_API_KEY,
+        Accept: 'application/json',
       },
-    )
+    })
     const listingsResult = (await listingsResponse.json()) as paths["/orders/asks/v3"]["get"]["responses"]["200"]["schema"]
 
     // Getting the most recent floor ask event
@@ -129,11 +128,11 @@ export async function listingPoll(
         !tokenDetails ||
         !tokenDetails?.collection ||
         !tokenDetails.attributes ||
-        !tokenDetails.collection.image ||
         !tokenDetails.collection.name ||
         !tokenDetails.image ||
         !tokenDetails.name
       ) {
+        console.log(JSON.stringify(tokenDetails, undefined, 2))
         logger.error(
           `couldn't return listing order collection data for ${listings[i].id}`
         );
@@ -150,11 +149,6 @@ export async function listingPoll(
           };
         }) ?? [];
 
-      const sourceIcon = await handleMediaConversion(
-        `${listings[i].source?.icon}`,
-        `${listings[i].source?.name}`
-      );
-
       const authorIcon = await handleMediaConversion(
         tokenDetails.collection.image ?? RESERVOIR_ICON_URL,
         tokenDetails.collection.name
@@ -170,7 +164,7 @@ export async function listingPoll(
         .setTitle(`${tokenDetails.name?.trim()} has been listed!`)
         .setAuthor({
           name: `${tokenDetails.collection.name}`,
-          url: `https://forgotten.market/${tokenDetails.contract}`,
+          url: MARKETPLACE_BASE_URL,
           iconURL: `attachment://${authorIcon.name}`,
         })
         .setDescription(
@@ -178,10 +172,7 @@ export async function listingPoll(
         )
         .addFields(attributes)
         .setImage(`attachment://${image.name}`)
-        .setFooter({
-          text: `${listings[i].source?.name}`,
-          iconURL: `attachment://${sourceIcon.name}`,
-        })
+        .setFooter({ text: `${listings[i].source?.name}` })
         .setTimestamp();
 
       // Generating floor token purchase button
@@ -189,14 +180,12 @@ export async function listingPoll(
         new ButtonBuilder()
           .setLabel("Purchase")
           .setStyle(5)
-          .setURL(
-            `https://forgotten.market/${tokenDetails.contract}/${tokenDetails.tokenId}`
-          )
+          .setURL(`${MARKETPLACE_BASE_URL}/property/${tokenDetails.tokenId}`)
       );
       channel.send({
         embeds: [listingEmbed],
         components: [row],
-        files: [sourceIcon, authorIcon, image],
+        files: [authorIcon, image],
       });
     }
     await redis.set("listingsorderid", listings[0].id);
