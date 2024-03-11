@@ -6,12 +6,12 @@ import {
   EmbedBuilder,
   TextChannel,
 } from "discord.js";
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
-import {ALERTS_ENABLED, RESERVOIR_BASE_URL} from "../env";
-const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
+import {ALERTS_ENABLED, ETHERSCAN_BASE_URL, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {buildUrl} from "../utils/build-url";
 
 /**
  * Check sales to see if there are new ones since the last alert
@@ -38,19 +38,22 @@ export async function salePoll(
   }
   try {
     // Authorizing with Reservoir API Key
-    await sdk.auth(apiKey);
+    const salesResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'sales/v4', [
+        ...contractArray.map<[string, string | number | boolean]>(address => (['contract', address])),
+        ['includeTokenMetadata', true],
+        ['limit', 100],
+      ]), {
+      headers: {
+        'x-api-key': RESERVOIR_API_KEY,
+        Accept: 'application/json',
+      },
+    })
+    const salesResult = (await salesResponse.json()) as paths['/sales/v4']['get']['responses']["200"]["schema"]
 
-    // Getting floor ask events from Reservoir
-    const salesResponse: { data: paths["/sales/v4"]["get"]["responses"]["200"]["schema"] } =
-      await sdk.getSalesV4({
-        contract: contractArray,
-        includeTokenMetadata: "true",
-        limit: "100",
-        accept: "*/*",
-      });
-
+    console.log(JSON.stringify(salesResult, undefined, 2))
     // Getting the most recent sales event
-    const sales = salesResponse.data.sales;
+    const sales = salesResult.sales;
 
     // Log failure + return if floor event couldn't be pulled
     if (!sales) {
@@ -132,7 +135,7 @@ export async function salePoll(
       const thumbnail = await handleMediaConversion(image, name);
 
       const authorIcon = await handleMediaConversion(
-        collection[0].image,
+        collection[0].image ?? RESERVOIR_ICON_URL,
         collection[0].name
       );
 
@@ -161,7 +164,7 @@ export async function salePoll(
         new ButtonBuilder()
           .setLabel("View Sale")
           .setStyle(5)
-          .setURL(`https://etherscan.io/tx/${sales[i].txHash}`)
+          .setURL(`${ETHERSCAN_BASE_URL}/tx/${sales[i].txHash}`)
       );
       channel.send({
         embeds: [salesEmbed],

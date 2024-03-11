@@ -4,7 +4,7 @@ import {
   ActionRowBuilder,
   AttachmentBuilder,
 } from "discord.js";
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "./logger";
 import { SelectMenuType } from "./types";
 import handleMediaConversion from "./media";

@@ -6,10 +6,16 @@ import {
   ButtonBuilder,
   ChannelType,
 } from "discord.js";
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
-import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, PRICE_CHANGE_OVERRIDE, RESERVOIR_BASE_URL} from "../env";
-const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
+import {
+  ALERT_COOL_DOWN_SECONDS,
+  ALERTS_ENABLED,
+  PRICE_CHANGE_OVERRIDE,
+  RESERVOIR_API_KEY,
+  RESERVOIR_BASE_URL
+} from "../env";
+import {buildUrl} from "../utils/build-url";
 
 /**
  * Check floor price events to see if it has changed since last alert
@@ -35,20 +41,23 @@ export async function floorPoll(
     return;
   }
   try {
-    // Authorizing with Reservoir API Key
-    await sdk.auth(apiKey);
-
     // Getting floor ask events from Reservoir
-    const floorAskResponse: paths["/events/collections/floor-ask/v1"]["get"]["responses"]["200"]["schema"] =
-      await sdk.getEventsCollectionsFlooraskV1({
+    const floorAskResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'events/collections/floor-ask/v1', {
         collection: contractAddress,
         sortDirection: "desc",
         limit: 1,
-        accept: "*/*",
-      });
+      }), {
+        headers: {
+          Accept: 'application/json',
+          'x-api-key': RESERVOIR_API_KEY,
+        },
+      },
+    )
+    const floorAskResult = (await floorAskResponse.json()) as paths["/events/collections/floor-ask/v1"]["get"]["responses"]["200"]["schema"]
 
     // Getting the most recent floor ask event
-    const floorAsk = floorAskResponse.events?.[0];
+    const floorAsk = floorAskResult.events?.[0];
 
     // Log failure + return if floor event couldn't be pulled
     if (
@@ -117,18 +126,24 @@ export async function floorPoll(
       }
 
       // Getting floor ask token from Reservoir
-      const tokenResponse: paths["/tokens/v5"]["get"]["responses"]["200"]["schema"] =
-        await sdk.getTokensV5({
-          tokens: [`${contractAddress}:${floorAsk.floorAsk.tokenId}`],
+      const tokenResponse = await fetch(
+        buildUrl(RESERVOIR_BASE_URL, 'tokens/v5', {
+          tokens: `${contractAddress}:${floorAsk.floorAsk.tokenId}`,
           sortBy: "floorAskPrice",
           limit: 1,
           includeTopBid: false,
           includeAttributes: true,
-          accept: "*/*",
-        });
+        }), {
+          headers: {
+            Accept: 'application/json',
+            'x-api-key': RESERVOIR_API_KEY,
+          },
+        },
+      )
+      const tokenResult = (await tokenResponse.json()) as paths["/tokens/v5"]["get"]["responses"]["200"]["schema"]
 
       // Getting the token details
-      const floorToken = tokenResponse.tokens?.[0];
+      const floorToken = tokenResult.tokens?.[0];
 
       // Log failure + return if token details don't exist
       if (

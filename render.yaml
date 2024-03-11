@@ -37,6 +37,8 @@ services:
             "mainChannel": "1215689531349663805",
             "salesChannel": "1215689531349663805"
           }
+      - key: ETHERSCAN_BASE_URL
+        value: https://etherscan.io
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL
@@ -83,6 +85,8 @@ services:
             "mainChannel": "1215424200030818305",
             "salesChannel": "1215424200030818305"
           }
+      - key: ETHERSCAN_BASE_URL
+        value: https://sepolia.etherscan.io
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL

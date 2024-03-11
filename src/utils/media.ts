@@ -27,7 +27,7 @@ export default async function handleMediaConversion(
   // Set fileName to collection name
   let fileName = name.replace(/[^0-9a-z]/gi, "");
   fileName = fileName.replace(/\s+/g, "");
-  attachment.name = `${fileName}.${"png"}`;
+  attachment.name = `${fileName}.png`;
 
   return attachment;
 }

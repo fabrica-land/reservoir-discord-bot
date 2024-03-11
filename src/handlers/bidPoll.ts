@@ -6,11 +6,17 @@ import {
   ButtonBuilder,
   ChannelType,
 } from "discord.js";
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import getCollection from "./getCollection";
-import {ALERT_COOL_DOWN_SECONDS, ALERTS_ENABLED, RESERVOIR_ICON_URL} from "../env";
-const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
+import {
+  ALERT_COOL_DOWN_SECONDS,
+  ALERTS_ENABLED,
+  RESERVOIR_API_KEY,
+  RESERVOIR_BASE_URL,
+  RESERVOIR_ICON_URL
+} from "../env";
+import {buildUrl} from "../utils/build-url";
 
 /**
  * Check top bid events to see if a new one was created since last alert
@@ -36,20 +42,23 @@ export async function bidPoll(
     return;
   }
   try {
-    // Authorizing with Reservoir API Key
-    await sdk.auth(apiKey);
-
     // Getting top bid events from Reservoir
-    const topBidResponse: paths["/events/collections/top-bid/v1"]["get"]["responses"]["200"]["schema"] =
-      await sdk.getEventsCollectionsTopbidV1({
+    const topBidResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'events/collections/top-bid/v1', {
         collection: contractAddress,
         sortDirection: "desc",
         limit: 1,
-        accept: "*/*",
-      });
+      }), {
+        headers: {
+          Accept: 'application/json',
+          'x-api-key': RESERVOIR_API_KEY,
+        },
+      },
+    )
+    const topBidResult = (await topBidResponse.json()) as  paths["/events/collections/top-bid/v1"]["get"]["responses"]["200"]["schema"]
 
     // Getting the most recent top bid event
-    const topBid = topBidResponse.events?.[0];
+    const topBid = topBidResult.events?.[0];
 
     // Log failure + return if top bid event couldn't be pulled
     if (

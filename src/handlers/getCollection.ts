@@ -1,8 +1,8 @@
-import {RESERVOIR_API_KEY} from "../env";
+import {RESERVOIR_API_KEY, RESERVOIR_BASE_URL} from "../env";
 
-const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
+import {buildUrl} from "../utils/build-url";
 
 /**
  * Retrieve collection data from Reservoir
@@ -35,21 +35,24 @@ export default async function getCollection(
   const selector = contractAddress ? { id: contractAddress } : { name: name };
 
   try {
-    // Authorizing with Reservoir API Key
-    await sdk.auth(RESERVOIR_API_KEY);
-
     // Pull collection data from Reservoir
-    const searchDataResponse: { data: paths["/collections/v5"]["get"]["responses"]["200"]["schema"] } =
-      await sdk.getCollectionsV5({
-        ...selector,
+    const searchDataResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'collections/v5', {
+        ...(selector as any),
         includeTopBid: includeTopBid,
         sortBy: "allTimeVolume",
-        limit: limit,
-        accept: "*/*",
-      });
+        limit,
+      }), {
+        headers: {
+          Accept: 'application/json',
+          'x-api-key': RESERVOIR_API_KEY,
+        },
+      },
+    )
+    const searchDataResult = (await searchDataResponse.json()) as paths["/collections/v5"]["get"]["responses"]["200"]["schema"]
 
     // Return array of collections
-    return searchDataResponse.data.collections;
+    return searchDataResult.collections;
   } catch (e) {
     // Log failure + throw on error
     logger.error(

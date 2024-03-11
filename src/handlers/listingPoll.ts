@@ -6,11 +6,11 @@ import {
   EmbedBuilder,
   TextChannel,
 } from "discord.js";
-import { paths } from "@reservoir0x/reservoir-kit-client";
+import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
-import {ALERTS_ENABLED} from "../env";
-const sdk = require("api")("@reservoirprotocol/v1.0#6e6s1kl9rh5zqg");
+import {ALERTS_ENABLED, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {buildUrl} from "../utils/build-url";
 
 /**
  * Check listings to see if there are new ones since the last alert
@@ -36,23 +36,26 @@ export async function listingPoll(
     return;
   }
   try {
-    // Authorizing with Reservoir API Key
-    await sdk.auth(apiKey);
-
     // Getting floor ask events from Reservoir
-    const listingResponse: { data: paths["/orders/asks/v3"]["get"]["responses"]["200"]["schema"] } =
-      await sdk.getOrdersAsksV3({
-        contracts: contractArray,
-        includePrivate: "false",
-        includeMetadata: "true",
-        includeRawData: "false",
-        sortBy: "createdAt",
-        limit: "500",
-        accept: "*/*",
-      });
+    const listingsResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'orders/asks/v3', [
+        ...contractArray.map<[string, string | number | boolean]>(address => (['contract', address])),
+        ['includePrivate', false],
+        ['includeMetadata', true],
+        ['includeRawData', false],
+        ['sortBy', 'createdAt'],
+        ['limit', 500],
+      ]), {
+        headers: {
+          'x-api-key': RESERVOIR_API_KEY,
+          Accept: 'application/json',
+        },
+      },
+    )
+    const listingsResult = (await listingsResponse.json()) as paths["/orders/asks/v3"]["get"]["responses"]["200"]["schema"]
 
     // Getting the most recent floor ask event
-    const listings = listingResponse.data.orders;
+    const listings = listingsResult.orders;
 
     // Log failure + return if floor event couldn't be pulled
     if (!listings) {
@@ -105,16 +108,22 @@ export async function listingPoll(
         continue;
       }
 
-      const tokenResponse: paths["/tokens/v5"]["get"]["responses"]["200"]["schema"] =
-        await sdk.getTokensV5({
+      const tokenResponse = await fetch(
+        buildUrl(RESERVOIR_BASE_URL, 'tokens/v5', {
           tokenSetId: listings[i].tokenSetId,
           sortBy: "floorAskPrice",
           limit: "20",
           includeTopBid: "false",
           includeAttributes: "true",
-          accept: "*/*",
-        });
-      const tokenDetails = tokenResponse.tokens?.[0].token;
+        }), {
+          headers: {
+            Accept: 'application/json',
+            'x-api-key': RESERVOIR_API_KEY,
+          },
+        },
+      )
+      const tokenResult = (await tokenResponse.json()) as paths["/tokens/v5"]["get"]["responses"]["200"]["schema"]
+      const tokenDetails = tokenResult.tokens?.[0].token;
 
       if (
         !tokenDetails ||
@@ -147,7 +156,7 @@ export async function listingPoll(
       );
 
       const authorIcon = await handleMediaConversion(
-        tokenDetails.collection.image,
+        tokenDetails.collection.image ?? RESERVOIR_ICON_URL,
         tokenDetails.collection.name
       );
 
