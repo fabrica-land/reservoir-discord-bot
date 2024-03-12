@@ -14,7 +14,6 @@ import {
   ALERTS_ENABLED,
   ETHERSCAN_BASE_URL,
   MARKETPLACE_BASE_URL,
-  RESERVOIR_API_KEY,
   RESERVOIR_BASE_URL,
   RESERVOIR_ICON_URL
 } from "../env";
@@ -52,7 +51,7 @@ export async function salePoll(
         ['limit', 100],
       ]), {
       headers: {
-        'x-api-key': RESERVOIR_API_KEY,
+        'x-api-key': apiKey,
         Accept: 'application/json',
       },
     })
@@ -72,8 +71,9 @@ export async function salePoll(
       return
     }
 
+    const cacheKey = 'reservoir:bot:saleOrderId'
     // Pull cached sales event id from Redis
-    const cachedId: string | null = await redis.get("saleorderid");
+    const cachedId: string | null = await redis.get(cacheKey)
     if (!sales[0].saleId) {
       logger.error("Couldn't set latest sales order id");
       return;
@@ -83,53 +83,53 @@ export async function salePoll(
       channel.send(
         "Restarting sales bot, new listings will begin to populate from here..."
       );
-      await redis.set("saleorderid", sales[0].saleId);
+      await redis.set(cacheKey, sales[0].saleId);
       return;
     }
 
-    // If most recent event matchs cached event exit function
+    // If most recent event matches cached event exit function
     if (sales[0].saleId === cachedId) {
       return;
     }
 
-    const cachedListingIndex =
+    const cachedIndex =
       sales.findIndex((order) => {
         return order.saleId === cachedId;
       }) - 1;
 
-    if (cachedListingIndex < 0) {
-      await redis.del("saleorderid");
+    if (cachedIndex < 0) {
+      await redis.del(cacheKey);
       logger.info("cached sale not found, resetting");
     }
 
-    for (let i = cachedListingIndex; i >= 0; i--) {
-      const name = sales[i].token?.name;
-      const image = sales[i].token?.image;
-
-      if (!sales[i].orderSource) {
+    for (let i = cachedIndex; i >= 0; i--) {
+      const sale = sales[i]
+      if (!sale.saleId || !sale.orderSource) {
         logger.error(
-          `couldn't return sale order source for ${sales[i].txHash}`
+          `sale order in txn ${sale.txHash} missing saleId or orderSource`
         );
         continue;
       }
+      const name = sale.token?.name;
+      const image = sale.token?.image;
 
       if (!name || !image) {
         logger.error(
-          `couldn't return sale order name and image for ${sales[i].txHash}`
+          `couldn't return sale order name and image for ${sale.txHash}`
         );
         continue;
       }
 
       const collection = await getCollection(
         undefined,
-        sales[i].token?.contract,
+        sale.token?.contract,
         1,
         false
       );
 
       if (!collection?.[0].image || !collection?.[0].name) {
         logger.error(
-          `couldn't return sale order collection data for ${sales[i].txHash}`
+          `couldn't return sale order collection data for ${sale.txHash}`
         );
         continue;
       }
@@ -143,19 +143,17 @@ export async function salePoll(
 
       const salesEmbed = new EmbedBuilder()
         .setColor(0x8b43e0)
-        .setTitle(`${sales[i].token?.name} has been sold!`)
+        .setTitle(`${sale.token?.name} has been sold!`)
         .setAuthor({
-          name: `${sales[i].token?.collection?.name}`,
+          name: `${sale.token?.collection?.name}`,
           url: MARKETPLACE_BASE_URL,
           iconURL: `attachment://${authorIcon.name}`,
         })
         .setDescription(
-          `Item: ${sales[i].token?.name}\nPrice: ${sales[i].price?.amount?.native}Ξ ($${sales[i].price?.amount?.usd})\nBuyer: ${sales[i].to}\nSeller: ${sales[i].from}`
+          `Item: ${sale.token?.name}\nPrice: ${sale.price?.amount?.native}Ξ ($${sale.price?.amount?.usd})\nBuyer: ${sale.to}\nSeller: ${sale.from}`
         )
         .setThumbnail(`attachment://${thumbnail.name}`)
-        .setFooter({
-          text: `${sales[i].orderSource}`,
-        })
+        .setFooter({ text: `${sale.orderSource}` })
         .setTimestamp();
 
       // Generating floor token purchase button
@@ -163,15 +161,15 @@ export async function salePoll(
         new ButtonBuilder()
           .setLabel("View Sale")
           .setStyle(5)
-          .setURL(`${ETHERSCAN_BASE_URL}/tx/${sales[i].txHash}`)
+          .setURL(buildUrl(ETHERSCAN_BASE_URL, `tx/${sale.txHash}`))
       );
       channel.send({
         embeds: [salesEmbed],
         components: [row],
         files: [thumbnail, authorIcon],
       });
+      await redis.set(cacheKey, sale.saleId);
     }
-    await redis.set("saleorderid", sales[0].saleId);
   } catch (e) {
     logger.error(`Error ${e} updating new sales`);
   }

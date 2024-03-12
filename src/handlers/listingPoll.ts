@@ -9,7 +9,7 @@ import {
 import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
-import {ALERTS_ENABLED, MARKETPLACE_BASE_URL, RESERVOIR_API_KEY, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {ALERTS_ENABLED, MARKETPLACE_BASE_URL, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
 import {buildUrl} from "../utils/build-url";
 
 /**
@@ -47,7 +47,7 @@ export async function listingPoll(
     ])
     const listingsResponse = await fetch(listingsUrl, {
       headers: {
-        'x-api-key': RESERVOIR_API_KEY,
+        'x-api-key': apiKey,
         Accept: 'application/json',
       },
     })
@@ -67,13 +67,14 @@ export async function listingPoll(
     }
 
     // Pull cached listing event id from Redis
-    const cachedId: string | null = await redis.get("listingsorderid");
+    const cacheKey = 'reservoir:bot:listingsOrderId'
+    const cachedId: string | null = await redis.get(cacheKey);
 
     if (!cachedId) {
       channel.send(
         "Restarting listing bot, new listings will begin to populate from here..."
       );
-      await redis.set("listingsorderid", listings[0].id);
+      await redis.set(cacheKey, listings[0].id);
       return;
     }
 
@@ -88,7 +89,7 @@ export async function listingPoll(
       }) - 1;
 
     if (cachedListingIndex < 0) {
-      await redis.del("listingsorderid");
+      await redis.del(cacheKey);
       logger.info("cached listing not found, resetting");
     }
 
@@ -117,7 +118,7 @@ export async function listingPoll(
         }), {
           headers: {
             Accept: 'application/json',
-            'x-api-key': RESERVOIR_API_KEY,
+            'x-api-key': apiKey,
           },
         },
       )
@@ -132,7 +133,6 @@ export async function listingPoll(
         !tokenDetails.image ||
         !tokenDetails.name
       ) {
-        console.log(JSON.stringify(tokenDetails, undefined, 2))
         logger.error(
           `couldn't return listing order collection data for ${listings[i].id}`
         );
@@ -188,7 +188,7 @@ export async function listingPoll(
         files: [authorIcon, image],
       });
     }
-    await redis.set("listingsorderid", listings[0].id);
+    await redis.set(cacheKey, listings[0].id);
   } catch (e) {
     logger.error(`Error ${e} updating new listings`);
   }

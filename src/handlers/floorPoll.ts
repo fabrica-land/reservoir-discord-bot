@@ -12,7 +12,6 @@ import {
   ALERT_COOL_DOWN_SECONDS,
   ALERTS_ENABLED,
   PRICE_CHANGE_OVERRIDE,
-  RESERVOIR_API_KEY,
   RESERVOIR_BASE_URL
 } from "../env";
 import {buildUrl} from "../utils/build-url";
@@ -50,7 +49,7 @@ export async function floorPoll(
       }), {
         headers: {
           Accept: 'application/json',
-          'x-api-key': RESERVOIR_API_KEY,
+          'x-api-key': apiKey,
         },
       },
     )
@@ -72,7 +71,8 @@ export async function floorPoll(
     }
 
     // Pull cached floor ask event id from Redis
-    const cachedId: string | null = await redis.get("flooreventid");
+    const cacheKey = 'reservoir:bot:floorEventId'
+    const cachedId: string | null = await redis.get(cacheKey);
 
     // If most recent event matchs cached event exit function
     if (Number(floorAsk.event.id) === Number(cachedId)) {
@@ -80,10 +80,12 @@ export async function floorPoll(
     }
 
     // Pull cooldown for floor ask alert from Redis
-    let eventCooldown: string | null = await redis.get("floorcooldown");
+    const coolDownCacheKey = 'reservoir:bot:floorcooldown'
+    let eventCooldown: string | null = await redis.get(coolDownCacheKey);
 
     // Pull cached floor ask price from Redis
-    const cachedPrice: string | null = await redis.get("floorprice");
+    const floorPriceCacheKey = 'reservoir:bot:floorPrice'
+    const cachedPrice: string | null = await redis.get(floorPriceCacheKey);
 
     // On X% change in floor ask override alert cooldown
     if (
@@ -99,19 +101,19 @@ export async function floorPoll(
     if (!eventCooldown) {
       // setting updated floor ask event id
       const idSuccess: "OK" = await redis.set(
-        "flooreventid",
+        coolDownCacheKey,
         floorAsk.event.id
       );
       // setting updated floor ask cooldown
       const cooldownSuccess: "OK" = await redis.set(
-        "floorcooldown",
+        coolDownCacheKey,
         "true",
         "EX",
         ALERT_COOL_DOWN_SECONDS
       );
       // setting updated floor ask price
       const priceSuccess: "OK" = await redis.set(
-        "floorprice",
+        floorPriceCacheKey,
         floorAsk.floorAsk.price
       );
 
@@ -136,7 +138,7 @@ export async function floorPoll(
         }), {
           headers: {
             Accept: 'application/json',
-            'x-api-key': RESERVOIR_API_KEY,
+            'x-api-key': apiKey,
           },
         },
       )

@@ -10,13 +10,12 @@ import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import getCollection from "./getCollection";
 import {
-  ALERT_COOL_DOWN_SECONDS,
-  ALERTS_ENABLED,
-  RESERVOIR_API_KEY,
+  ALERTS_ENABLED, MARKETPLACE_BASE_URL,
   RESERVOIR_BASE_URL,
   RESERVOIR_ICON_URL
 } from "../env";
 import {buildUrl} from "../utils/build-url";
+import getToken from "./getToken";
 
 /**
  * Check top bid events to see if a new one was created since last alert
@@ -42,121 +41,111 @@ export async function bidPoll(
     return;
   }
   try {
-    // Getting top bid events from Reservoir
-    const topBidResponse = await fetch(
-      buildUrl(RESERVOIR_BASE_URL, 'events/collections/top-bid/v1', {
-        collection: contractAddress,
+    // Getting bids from Reservoir
+    const bidsResponse = await fetch(
+      buildUrl(RESERVOIR_BASE_URL, 'orders/bids/v6', {
+        contracts: contractAddress,
         sortDirection: "desc",
-        limit: 1,
+        limit: 100,
       }), {
         headers: {
           Accept: 'application/json',
-          'x-api-key': RESERVOIR_API_KEY,
+          'x-api-key': apiKey,
         },
       },
     )
-    const topBidResult = (await topBidResponse.json()) as  paths["/events/collections/top-bid/v1"]["get"]["responses"]["200"]["schema"]
+    const bidsResult = (await bidsResponse.json()) as  paths["/orders/bids/v6"]["get"]["responses"]["200"]["schema"]
 
-    // Getting the most recent top bid event
-    const topBid = topBidResult.events?.[0];
+    const bids = bidsResult.orders
 
-    // Log failure + return if top bid event couldn't be pulled
-    if (
-      !topBid?.event?.id ||
-      !topBid?.topBid?.price ||
-      !topBid?.topBid?.maker
-    ) {
-      logger.error(`Could not pull top bid for ${contractAddress}`);
+    if (!bids) {
+      logger.error(`Could not pull bids for ${contractAddress}`);
       return;
     }
 
-    // Pull cached top bid event id from Redis
-    const cachedId: string | null = await redis.get("bideventid");
+    if (!bids.length) {
+      logger.debug(`There are no bids for ${contractAddress}`)
+      return
+    }
 
-    // If most recent event matches cached event exit function
-    if (Number(topBid.event.id) === Number(cachedId)) {
+    // Getting top bid collection from Reservoir
+    const collectionResponse = await getCollection(
+      undefined,
+      contractAddress,
+      1,
+      false
+    );
+
+    // Getting top bid collection details
+    const collection = collectionResponse?.[0];
+
+    // Log failure + return if collection details don't exist
+    if (!collection || !collection.name) {
+      logger.error("Could not collect stats");
       return;
     }
 
-    // Pull cooldown for floor ask alert from Redis
-    const eventCooldown: string | null = await redis.get("bidcooldown");
-
-    // Pull cached top bid price from Redis
-    const cachedPrice: string | null = await redis.get("bidprice");
-
-    // If the cached price does not match the most recent price (false updates due to sudoswap pools) and process not on cooldown generate alert
-    if (Number(topBid.topBid.price) !== Number(cachedPrice) && !eventCooldown) {
-      // setting updated top bid event id
-      const success: "OK" = await redis.set("bideventid", topBid.event.id);
-      // setting updated top bid cooldown
-      const cooldownSuccess: "OK" = await redis.set(
-        "bidcooldown",
-        "true",
-        "EX",
-        ALERT_COOL_DOWN_SECONDS,
-      );
-
-      // Log failure + return if top bid info couldn't be set
-      if (success !== "OK" || cooldownSuccess !== "OK") {
-        logger.error("Could not set new topbid eventid");
-        return;
+    for (let i = 0 ; i < bids.length ; i++) {
+      // Pull cached bid event id from Redis
+      const bid = bids[i]
+      // Log failure + return if bid event couldn't be pulled
+      if (
+        !bid?.id ||
+        !bid?.price ||
+        !bid?.maker
+      ) {
+        logger.error(`Could not pull bid for ${contractAddress}`);
+        continue;
+      }
+      const cacheKey = `reservoir:bot:bid:${bid.id}`
+      const cached: string | null = await redis.get(cacheKey)
+      if (cached) {
+        logger.debug("bid is cached; stopping bid consideration");
+        break;
       }
 
-      // Getting top bid collection from Reservoir
-      const bidCollectionResponse = await getCollection(
-        undefined,
-        contractAddress,
-        1,
-        true
-      );
+      const tokenIdParts = bid.tokenSetId.split(':')
+      const tokenId = tokenIdParts[tokenIdParts.length - 1]
+      const token = await getToken(contractAddress, tokenId)
 
-      // Getting top bid collection details
-      const bidCollection = bidCollectionResponse?.[0];
-
-      // Log failure + return if collection details don't exist
-      if (!bidCollection || !bidCollection.name) {
-        logger.error("Could not collect stats");
-        return;
+      const name = token.name;
+      const image = token.image;
+      if (!name || !image) {
+        logger.error(
+          `couldn't return bid order name and image for ${bid.tokenSetId}`
+        );
+        continue;
       }
 
-      // Generating top bid token Discord alert embed
+      // Generating bid token Discord alert embed
       const bidEmbed = new EmbedBuilder()
         .setColor(0x8b43e0)
-        .setTitle("New Top Bid!")
+        .setTitle(`New Bid for ${token.name}`)
         .setAuthor({
-          name: bidCollection.name,
-          url: `https://reservoir.market/collections/${bidCollection.id}`,
-          iconURL: bidCollection.image ?? RESERVOIR_ICON_URL,
+          name: collection.name,
+          url: `https://reservoir.market/collections/${collection.id}`,
+          iconURL: collection.image ?? RESERVOIR_ICON_URL,
         })
         .setDescription(
-          `The top bid on the collection just changed to ${
-            topBid.topBid.price
-          }Ξ made by [${topBid.topBid.maker.substring(
-            0,
-            6
-          )}](https://www.reservoir.market/address/${topBid.topBid.maker})`
+          `Item: ${name}\nPrice: $${bid.price?.amount?.usd}\nBuyer: ${bid.maker}\nSeller: ${bid.taker}`
         )
-        .setThumbnail(bidCollection.image ?? RESERVOIR_ICON_URL)
+        .setThumbnail(collection.image ?? RESERVOIR_ICON_URL)
+        .setFooter({ text: `${bid.source?.name}` })
         .setTimestamp();
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setLabel("Accept offer")
+          .setLabel("View Property")
           .setStyle(5)
-          .setURL(
-            `https://www.reservoir.market/collections/${topBid.topBid.contract}`
-          )
+          .setURL(buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`))
       );
 
       // Sending top bid token Discord alert
-      channel.send({ embeds: [bidEmbed], components: [row] });
-      logger.info(
-        `Successfully alerted new top bid by ${JSON.stringify(
-          topBid.topBid.maker
-        )}`
-      );
+      channel.send({embeds: [bidEmbed], components: [row]});
+      logger.info(`Successfully alerted new bid by ${JSON.stringify(bid.maker)}`);
+      await redis.set(cacheKey, '1');
     }
   } catch (e) {
-    logger.error(`Error ${e} updating new top bid`);
+    logger.error(`Error ${e} getting new bids`);
   }
 }
