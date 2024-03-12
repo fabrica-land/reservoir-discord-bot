@@ -9,7 +9,7 @@ import {
 import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
-import {ALERTS_ENABLED, MARKETPLACE_BASE_URL, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
+import {ALERTS_ENABLED, CHAIN, MARKETPLACE_BASE_URL, RESERVOIR_BASE_URL, RESERVOIR_ICON_URL} from "../env";
 import {buildUrl} from "../utils/build-url";
 
 /**
@@ -67,7 +67,7 @@ export async function listingPoll(
     }
 
     // Pull cached listing event id from Redis
-    const cacheKey = 'reservoir:bot:listingsOrderId'
+    const cacheKey = `reservoir:bot:listingsOrderId:${CHAIN}`
     const cachedId: string | null = await redis.get(cacheKey);
 
     if (!cachedId) {

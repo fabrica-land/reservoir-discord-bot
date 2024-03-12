@@ -10,7 +10,7 @@ import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import {
   ALERT_COOL_DOWN_SECONDS,
-  ALERTS_ENABLED,
+  ALERTS_ENABLED, CHAIN,
   PRICE_CHANGE_OVERRIDE,
   RESERVOIR_BASE_URL
 } from "../env";
@@ -71,7 +71,7 @@ export async function floorPoll(
     }
 
     // Pull cached floor ask event id from Redis
-    const cacheKey = 'reservoir:bot:floorEventId'
+    const cacheKey = `reservoir:bot:floorEventId:${CHAIN}`
     const cachedId: string | null = await redis.get(cacheKey);
 
     // If most recent event matchs cached event exit function
@@ -80,11 +80,11 @@ export async function floorPoll(
     }
 
     // Pull cooldown for floor ask alert from Redis
-    const coolDownCacheKey = 'reservoir:bot:floorcooldown'
+    const coolDownCacheKey = `reservoir:bot:floorcooldown:${CHAIN}`
     let eventCooldown: string | null = await redis.get(coolDownCacheKey);
 
     // Pull cached floor ask price from Redis
-    const floorPriceCacheKey = 'reservoir:bot:floorPrice'
+    const floorPriceCacheKey = `reservoir:bot:floorPrice:${CHAIN}`
     const cachedPrice: string | null = await redis.get(floorPriceCacheKey);
 
     // On X% change in floor ask override alert cooldown

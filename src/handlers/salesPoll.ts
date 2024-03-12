@@ -11,7 +11,7 @@ import logger from "../utils/logger";
 import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
 import {
-  ALERTS_ENABLED,
+  ALERTS_ENABLED, CHAIN,
   ETHERSCAN_BASE_URL,
   MARKETPLACE_BASE_URL,
   RESERVOIR_BASE_URL,
@@ -71,7 +71,7 @@ export async function salePoll(
       return
     }
 
-    const cacheKey = 'reservoir:bot:saleOrderId'
+    const cacheKey = `reservoir:bot:saleOrderId:${CHAIN}`
     // Pull cached sales event id from Redis
     const cachedId: string | null = await redis.get(cacheKey)
     if (!sales[0].saleId) {

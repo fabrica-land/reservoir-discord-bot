@@ -72,6 +72,7 @@ const getStringArray = (name: string): Array<string> => {
 export const ALERT_CONTRACT_ADDRESS = getString('ALERT_CONTRACT_ADDRESS')
 export const ALERT_COOL_DOWN_SECONDS = getNumber('ALERT_COOL_DOWN_SECONDS')
 export const ALERTS_ENABLED = getStringToBool('ALERTS_ENABLED')
+export const CHAIN = getString('CHAIN')
 export const DISCORD_APPLICATION_ID = getString('DISCORD_APPLICATION_ID')
 export const DISCORD_CHANNEL_IDS = getStringToString('DISCORD_CHANNEL_IDS')
 export const DISCORD_TOKEN = getString('DISCORD_TOKEN')

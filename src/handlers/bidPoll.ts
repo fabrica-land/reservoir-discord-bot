@@ -97,7 +97,7 @@ export async function bidPoll(
         logger.error(`Could not pull bid for ${contractAddress}`);
         continue;
       }
-      const cacheKey = `reservoir:bot:bid:${bid.id}`
+      const cacheKey = `reservoir:bot:bid:${bid.id}}`
       const cached: string | null = await redis.get(cacheKey)
       if (cached) {
         logger.debug("bid is cached; stopping bid consideration");

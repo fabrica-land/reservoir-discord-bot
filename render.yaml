@@ -28,6 +28,8 @@ services:
             "listings": true,
             "sales": true
           }
+      - key: CHAIN
+        value: ethereum
       - key: DISCORD_APPLICATION_ID
         value: 1215454490237337740
       - key: DISCORD_CHANNEL_IDS
@@ -78,6 +80,8 @@ services:
             "listings": true,
             "sales": true
           }
+      - key: CHAIN
+        value: sepolia
       - key: DISCORD_APPLICATION_ID
         value: 1215454490237337740
       - key: DISCORD_CHANNEL_IDS
