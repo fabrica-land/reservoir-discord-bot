@@ -23,7 +23,7 @@ services:
       - key: ALERTS_ENABLED
         value: |
           {
-            "bid": false,
+            "bid": true,
             "floor": false,
             "listings": true,
             "sales": true
@@ -75,7 +75,7 @@ services:
       - key: ALERTS_ENABLED
         value: |
           {
-            "bid": false,
+            "bid": true,
             "floor": false,
             "listings": true,
             "sales": true
