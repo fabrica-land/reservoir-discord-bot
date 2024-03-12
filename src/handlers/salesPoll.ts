@@ -168,8 +168,8 @@ export async function salePoll(
         components: [row],
         files: [thumbnail, authorIcon],
       });
-      await redis.set(cacheKey, sale.saleId);
     }
+    await redis.set(cacheKey, sales[0].saleId);
   } catch (e) {
     logger.error(`Error ${e} updating new sales`);
   }
