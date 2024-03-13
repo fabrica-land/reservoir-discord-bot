@@ -44,7 +44,7 @@ services:
       - key: MARKETPLACE_BASE_URL
         value: https://app.fabrica.land
       - key: POLL_SECONDS
-        value: 60
+        value: 600
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL
@@ -98,7 +98,7 @@ services:
       - key: MARKETPLACE_BASE_URL
         value: https://sepolia.fabrica.land
       - key: POLL_SECONDS
-        value: 60
+        value: 600
       - key: PRICE_CHANGE_OVERRIDE
         value: 0.1
       - key: RESERVOIR_BASE_URL
