@@ -10,7 +10,8 @@ import { paths } from "@reservoir0x/reservoir-sdk";
 import logger from "../utils/logger";
 import {
   ALERT_COOL_DOWN_SECONDS,
-  ALERTS_ENABLED, CHAIN,
+  ALERTS_ENABLED,
+  CHAIN,
   PRICE_CHANGE_OVERRIDE,
   RESERVOIR_BASE_URL
 } from "../env";

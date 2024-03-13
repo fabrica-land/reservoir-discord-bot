@@ -14,7 +14,13 @@ import replyChatInteraction from './interactions/chatInteractions'
 import { replySelectInteraction } from './interactions/selectInteractions'
 import commandBuilder from './utils/commands'
 import Redis from 'ioredis'
-import {ALERT_CONTRACT_ADDRESS, DISCORD_APPLICATION_ID, DISCORD_CHANNEL_IDS, TRACKED_CONTRACTS} from "./env";
+import {
+  ALERT_CONTRACT_ADDRESS,
+  DISCORD_APPLICATION_ID,
+  DISCORD_CHANNEL_IDS,
+  POLL_SECONDS,
+  TRACKED_CONTRACTS
+} from "./env";
 
 export default class Discord {
   // Discord Bot Token
@@ -68,7 +74,7 @@ export default class Discord {
       // Collecting new data in 1s
       setTimeout(
         () => this.poll(listingChannel, salesChannel, mainChannel, redis),
-        1000
+        1000 * POLL_SECONDS,
       )
     })
   }
