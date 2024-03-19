@@ -119,13 +119,14 @@ export async function bidPoll(
 
       const marketplaceUrl = buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`)
       const county = token.attributes?.find((attr) => attr.key === 'County')?.value
+      const state = token.attributes?.find((attr) => attr.key === 'State')?.value
 
       // Generating bid token Discord alert embed
       const bidEmbed = new EmbedBuilder()
         .setColor(0x8b43e0)
         .setTitle(`New Bid for ${token.name}`)
         .setAuthor({
-          name: `${county} County`,
+          name: `${county}, ${state}`,
           url: marketplaceUrl,
           iconURL: collection.image ?? RESERVOIR_ICON_URL,
         })
