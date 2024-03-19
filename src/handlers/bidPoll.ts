@@ -117,27 +117,32 @@ export async function bidPoll(
         continue;
       }
 
+      const marketplaceUrl = buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`)
+      const county = token.attributes?.find((attr) => attr.key === 'County')?.value
+
       // Generating bid token Discord alert embed
       const bidEmbed = new EmbedBuilder()
         .setColor(0x8b43e0)
         .setTitle(`New Bid for ${token.name}`)
         .setAuthor({
-          name: collection.name,
-          url: `https://reservoir.market/collections/${collection.id}`,
+          name: `${county} County`,
+          url: marketplaceUrl,
           iconURL: collection.image ?? RESERVOIR_ICON_URL,
         })
         .setDescription(
-          `Item: ${name}\nPrice: $${bid.price?.amount?.usd}\nBuyer: ${bid.maker}\nSeller: ${bid.taker}`
+          `Price: $${Math.round((bid.price?.amount?.usd ?? 0) * 100) / 100}`
         )
-        .setThumbnail(collection.image ?? RESERVOIR_ICON_URL)
         .setFooter({ text: `${bid.source?.name}` })
         .setTimestamp();
 
+      if (token.image) {
+        bidEmbed.setThumbnail(token.image)
+      }
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setLabel("View Property")
           .setStyle(5)
-          .setURL(buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`))
+          .setURL(marketplaceUrl)
       );
 
       // Sending top bid token Discord alert
@@ -146,6 +151,7 @@ export async function bidPoll(
       await redis.set(cacheKey, '1');
     }
   } catch (e) {
+    console.log(e)
     logger.error(`Error ${e} getting new bids`);
   }
 }
