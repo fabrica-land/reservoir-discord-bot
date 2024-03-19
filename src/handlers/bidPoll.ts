@@ -131,7 +131,10 @@ export async function bidPoll(
           iconURL: collection.image ?? RESERVOIR_ICON_URL,
         })
         .setDescription(
-          `Price: $${Math.round((bid.price?.amount?.usd ?? 0) * 100) / 100}`
+          `Price: ${Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+          }).format(Math.round((bid.price?.amount?.usd ?? 0) * 100) / 100)}`
         )
         .setFooter({ text: `${bid.source?.name}` })
         .setTimestamp();
