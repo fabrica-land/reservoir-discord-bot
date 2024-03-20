@@ -25,6 +25,7 @@ export default async function getToken(
     // Pull collection data from Reservoir
     const tokenResponse = await fetch(
       buildUrl(RESERVOIR_BASE_URL, 'tokens/v8', {
+        includeAttributes: true,
         tokens: `${contractAddress}:${tokenId}`,
       }), {
         headers: {
