@@ -12,7 +12,6 @@ import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
 import {
   ALERTS_ENABLED, CHAIN,
-  ETHERSCAN_BASE_URL,
   MARKETPLACE_BASE_URL,
   RESERVOIR_BASE_URL,
   RESERVOIR_ICON_URL
