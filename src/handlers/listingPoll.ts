@@ -139,15 +139,11 @@ export async function listingPoll(
         continue;
       }
 
-      // create attributes array for discord fields if the attributes exist
-      const attributes: { name: string; value: string; inline: boolean }[] =
-        tokenDetails.attributes.map((attr) => {
-          return {
-            name: attr.key ?? "",
-            value: attr.value ?? "",
-            inline: true,
-          };
-        }) ?? [];
+      const marketplaceUrl = buildUrl(MARKETPLACE_BASE_URL, `property/${tokenDetails.tokenId}`)
+      const county = tokenDetails.attributes.find((attr) => attr.key === 'County')?.value
+      const state = tokenDetails.attributes.find((attr) => attr.key === 'State')?.value
+
+
 
       const authorIcon = await handleMediaConversion(
         tokenDetails.collection.image ?? RESERVOIR_ICON_URL,
@@ -163,14 +159,16 @@ export async function listingPoll(
         .setColor(0x8b43e0)
         .setTitle(`${tokenDetails.name?.trim()} has been listed!`)
         .setAuthor({
-          name: `${tokenDetails.collection.name}`,
-          url: MARKETPLACE_BASE_URL,
+          name: `${county}, ${state}`,
+          url: marketplaceUrl,
           iconURL: `attachment://${authorIcon.name}`,
         })
         .setDescription(
-          `Item: ${tokenDetails.name}\nPrice: ${listings[i].price?.amount?.native}Ξ ($${listings[i].price?.amount?.usd})\nFrom: ${listings[i].maker}`
+          `Price: ${Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+          }).format(Math.round((listings[i].price?.amount?.usd ?? 0) * 100) / 100)}`
         )
-        .addFields(attributes)
         .setImage(`attachment://${image.name}`)
         .setFooter({ text: `${listings[i].source?.name}` })
         .setTimestamp();
@@ -180,7 +178,7 @@ export async function listingPoll(
         new ButtonBuilder()
           .setLabel("Purchase")
           .setStyle(5)
-          .setURL(`${MARKETPLACE_BASE_URL}/property/${tokenDetails.tokenId}`)
+          .setURL(marketplaceUrl)
       );
       channel.send({
         embeds: [listingEmbed],
