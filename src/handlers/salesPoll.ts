@@ -110,12 +110,13 @@ export async function salePoll(
         );
         continue;
       }
-      const name = sale.token?.name;
-      const image = sale.token?.image;
+      const tokenId = sale.token?.tokenId
+      const name = sale.token?.name
+      const image = sale.token?.image
 
-      if (!name || !image) {
+      if (!tokenId || !name || !image) {
         logger.error(
-          `couldn't return sale order name and image for ${sale.txHash}`
+          `couldn't return sale order tokenId, name, or image for ${sale.txHash}`
         );
         continue;
       }
@@ -165,9 +166,9 @@ export async function salePoll(
       // Generating floor token purchase button
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setLabel("View Sale")
+          .setLabel("View Property")
           .setStyle(5)
-          .setURL(buildUrl(ETHERSCAN_BASE_URL, `tx/${sale.txHash}`))
+          .setURL(buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`))
       );
       channel.send({
         embeds: [salesEmbed],
