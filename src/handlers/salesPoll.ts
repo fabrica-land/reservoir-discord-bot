@@ -12,7 +12,6 @@ import handleMediaConversion from "../utils/media";
 import getCollection from "./getCollection";
 import {
   ALERTS_ENABLED, CHAIN,
-  ETHERSCAN_BASE_URL,
   MARKETPLACE_BASE_URL,
   RESERVOIR_BASE_URL,
   RESERVOIR_ICON_URL
@@ -110,12 +109,13 @@ export async function salePoll(
         );
         continue;
       }
-      const name = sale.token?.name;
-      const image = sale.token?.image;
+      const tokenId = sale.token?.tokenId
+      const name = sale.token?.name
+      const image = sale.token?.image
 
-      if (!name || !image) {
+      if (!tokenId || !name || !image) {
         logger.error(
-          `couldn't return sale order name and image for ${sale.txHash}`
+          `couldn't return sale order tokenId, name, or image for ${sale.txHash}`
         );
         continue;
       }
@@ -141,6 +141,8 @@ export async function salePoll(
         collection[0].name
       );
 
+      const buyerLink = buildUrl(MARKETPLACE_BASE_URL, `profile/${sale.to}`)
+      const sellerLink = buildUrl(MARKETPLACE_BASE_URL, `profile/${sale.from}`)
       const salesEmbed = new EmbedBuilder()
         .setColor(0x8b43e0)
         .setTitle(`${sale.token?.name} has been sold!`)
@@ -150,7 +152,11 @@ export async function salePoll(
           iconURL: `attachment://${authorIcon.name}`,
         })
         .setDescription(
-          `Item: ${sale.token?.name}\nPrice: ${sale.price?.amount?.native}Ξ ($${sale.price?.amount?.usd})\nBuyer: ${sale.to}\nSeller: ${sale.from}`
+          `Price: ${Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            }).format(Math.round((sale.price?.amount?.usd ?? 0) * 100) / 100)
+          }\nBuyer: ${buyerLink}\nSeller: ${sellerLink}`
         )
         .setThumbnail(`attachment://${thumbnail.name}`)
         .setFooter({ text: `${sale.orderSource}` })
@@ -159,9 +165,9 @@ export async function salePoll(
       // Generating floor token purchase button
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setLabel("View Sale")
+          .setLabel("View Property")
           .setStyle(5)
-          .setURL(buildUrl(ETHERSCAN_BASE_URL, `tx/${sale.txHash}`))
+          .setURL(buildUrl(MARKETPLACE_BASE_URL, `property/${tokenId}`))
       );
       channel.send({
         embeds: [salesEmbed],
